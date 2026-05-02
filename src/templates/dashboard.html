@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Dashboard - Student Grading System</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; }
+    nav { background: #4CAF50; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+    nav span { color: white; font-size: 18px; font-weight: bold; }
+    nav div a { color: white; text-decoration: none; margin-left: 20px; font-size: 14px; }
+    nav div a:hover { text-decoration: underline; }
+    .btn-logout { background: #c62828; color: white; border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-left: 20px; }
+    .btn-logout:hover { background: #b71c1c; }
+    .container { max-width: 900px; margin: 32px auto; padding: 0 20px; }
+    h2 { color: #333; }
+    .card { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); margin-bottom: 28px; }
+    label { display: block; margin-top: 10px; font-weight: bold; color: #555; }
+    input { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .btn { padding: 9px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-hijau { background: #4CAF50; color: white; margin-top: 14px; }
+    .btn-hijau:hover { background: #45a049; }
+    .btn-abu { background: #9e9e9e; color: white; margin-top: 14px; margin-left: 8px; }
+    .btn-abu:hover { background: #757575; }
+    .btn-biru { background: #2196F3; color: white; }
+    .btn-biru:hover { background: #1976D2; }
+    .btn-merah { background: #f44336; color: white; }
+    .btn-merah:hover { background: #d32f2f; }
+    #pesan { margin-top: 10px; font-weight: bold; }
+    #pesan.sukses { color: green; }
+    #pesan.error { color: red; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #eee; }
+    .grade-A { color: #1a7a1a; font-weight: bold; }
+    .grade-B { color: #2a6db5; font-weight: bold; }
+    .grade-C { color: #e6a817; font-weight: bold; }
+    .grade-D { color: #e07b00; font-weight: bold; }
+    .grade-E { color: #cc0000; font-weight: bold; }
+    #kosong { text-align: center; color: #999; padding: 16px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <span>Student Grading System</span>
+    <div>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/view">Lihat Data</a>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2 id="judulForm">Tambah Mahasiswa</h2>
+      <form id="formMahasiswa">
+        <input type="hidden" id="editId" value=""/>
+        <label>Nama</label>
+        <input type="text" id="name" placeholder="Nama mahasiswa" required/>
+        <label>Nilai Tugas (0–100)</label>
+        <input type="number" id="nilai_tugas" min="0" max="100" placeholder="0" required/>
+        <label>Nilai UTS (0–100)</label>
+        <input type="number" id="nilai_uts" min="0" max="100" placeholder="0" required/>
+        <label>Nilai UAS (0–100)</label>
+        <input type="number" id="nilai_uas" min="0" max="100" placeholder="0" required/>
+        <button type="submit" class="btn btn-hijau" id="btnSubmit">Tambah Mahasiswa</button>
+        <button type="button" class="btn btn-abu" id="btnBatal" onclick="resetForm()" style="display:none">Batal</button>
+        <div id="pesan"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Daftar Mahasiswa</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Nama</th><th>Tugas</th><th>UTS</th><th>UAS</th><th>Nilai Akhir</th><th>Grade</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelMahasiswa">
+          <tr><td colspan="8" id="kosong">Belum ada data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    cekLogin();
+    loadMahasiswa();
+
+    document.getElementById("formMahasiswa").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const id = document.getElementById("editId").value;
+      const payload = {
+        name: document.getElementById("name").value,
+        nilai_tugas: parseFloat(document.getElementById("nilai_tugas").value),
+        nilai_uts: parseFloat(document.getElementById("nilai_uts").value),
+        nilai_uas: parseFloat(document.getElementById("nilai_uas").value),
+      };
+
+      const isEdit = id !== "";
+      const res = await fetch(isEdit ? "/students/" + id : "/students", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        const aksi = isEdit ? "diperbarui" : "ditambahkan";
+        tampilPesan(`"${data.name}" berhasil ${aksi}. Grade: ${data.grade} (${data.nilai_akhir})`, "sukses");
+        resetForm();
+        loadMahasiswa();
+      } else {
+        tampilPesan("Error: " + data.error, "error");
+      }
+    });
+
+    async function loadMahasiswa() {
+      const res = await fetch("/students");
+      const data = await res.json();
+      const tbody = document.getElementById("tabelMahasiswa");
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" id="kosong">Belum ada data.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(m => `
+        <tr>
+          <td>${m.id}</td><td>${m.name}</td><td>${m.nilai_tugas}</td>
+          <td>${m.nilai_uts}</td><td>${m.nilai_uas}</td><td>${m.nilai_akhir}</td>
+          <td class="grade-${m.grade}">${m.grade}</td>
+          <td>
+            <button class="btn btn-biru" onclick="isiFormEdit(${m.id},'${m.name}',${m.nilai_tugas},${m.nilai_uts},${m.nilai_uas})">Edit</button>
+            &nbsp;
+            <button class="btn btn-merah" onclick="hapusMahasiswa(${m.id})">Hapus</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function isiFormEdit(id, name, tugas, uts, uas) {
+      document.getElementById("editId").value = id;
+      document.getElementById("name").value = name;
+      document.getElementById("nilai_tugas").value = tugas;
+      document.getElementById("nilai_uts").value = uts;
+      document.getElementById("nilai_uas").value = uas;
+      document.getElementById("judulForm").textContent = "Edit Mahasiswa (ID: " + id + ")";
+      document.getElementById("btnSubmit").textContent = "Simpan Perubahan";
+      document.getElementById("btnBatal").style.display = "inline-block";
+      document.getElementById("pesan").textContent = "";
+      window.scrollTo(0, 0);
+    }
+
+    async function hapusMahasiswa(id) {
+      if (!confirm("Hapus mahasiswa ID " + id + "?")) return;
+      const res = await fetch("/students/" + id, { method: "DELETE" });
+      const data = await res.json();
+      tampilPesan(res.ok ? (data.message || "Berhasil dihapus.") : "Error: " + data.error, res.ok ? "sukses" : "error");
+      if (res.ok) loadMahasiswa();
+    }
+
+    function resetForm() {
+      document.getElementById("formMahasiswa").reset();
+      document.getElementById("editId").value = "";
+      document.getElementById("judulForm").textContent = "Tambah Mahasiswa";
+      document.getElementById("btnSubmit").textContent = "Tambah Mahasiswa";
+      document.getElementById("btnBatal").style.display = "none";
+    }
+
+    function tampilPesan(teks, tipe) {
+      const el = document.getElementById("pesan");
+      el.textContent = teks;
+      el.className = tipe;
+    }
+  </script>
+</body>
+</html>

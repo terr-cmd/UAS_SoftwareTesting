@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Lihat Data - Student Grading System</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; }
+    nav { background: #4CAF50; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+    nav span { color: white; font-size: 18px; font-weight: bold; }
+    nav div a { color: white; text-decoration: none; margin-left: 20px; font-size: 14px; }
+    nav div a:hover { text-decoration: underline; }
+    .btn-logout { background: #c62828; color: white; border: none; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-left: 20px; }
+    .btn-logout:hover { background: #b71c1c; }
+    .container { max-width: 1000px; margin: 32px auto; padding: 0 20px; }
+    h2 { color: #333; }
+    .card { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #eee; }
+    tr:last-child td { border-bottom: none; }
+    .grade-A { color: #1a7a1a; font-weight: bold; }
+    .grade-B { color: #2a6db5; font-weight: bold; }
+    .grade-C { color: #e6a817; font-weight: bold; }
+    .grade-D { color: #e07b00; font-weight: bold; }
+    .grade-E { color: #cc0000; font-weight: bold; }
+    #kosong { text-align: center; color: #999; padding: 20px; }
+    .info { color: #555; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <span>Student Grading System</span>
+    <div>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/view">Lihat Data</a>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>Data Seluruh Mahasiswa</h2>
+      <p class="info" id="infoJumlah">Memuat data...</p>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nama</th>
+            <th>Nilai Tugas</th>
+            <th>Nilai UTS</th>
+            <th>Nilai UAS</th>
+            <th>Nilai Akhir</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody id="tabelMahasiswa">
+          <tr><td colspan="7" id="kosong">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    cekLogin();
+
+    async function loadData() {
+      const res = await fetch("/students");
+      const data = await res.json();
+      const tbody = document.getElementById("tabelMahasiswa");
+      const info = document.getElementById("infoJumlah");
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" id="kosong">Belum ada data mahasiswa.</td></tr>';
+        info.textContent = "Total: 0 mahasiswa";
+        return;
+      }
+
+      info.textContent = "Total: " + data.length + " mahasiswa";
+      tbody.innerHTML = data.map(m => `
+        <tr>
+          <td>${m.id}</td>
+          <td>${m.name}</td>
+          <td>${m.nilai_tugas}</td>
+          <td>${m.nilai_uts}</td>
+          <td>${m.nilai_uas}</td>
+          <td>${m.nilai_akhir}</td>
+          <td class="grade-${m.grade}">${m.grade}</td>
+        </tr>
+      `).join("");
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
