@@ -1,5 +1,8 @@
 # Student Grading System API
 
+![CI](https://github.com/USERNAME/REPO_NAME/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/USERNAME/REPO_NAME/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/REPO_NAME)
+
 Aplikasi ini adalah REST API sederhana berbasis Python Flask yang digunakan untuk mengelola data mahasiswa sekaligus menghitung nilai akhir dan menentukan grade secara otomatis.
 
 ---
