@@ -9,6 +9,9 @@ class StudentRepository:
         student_data["id"] = self._next_id
         self._storage[self._next_id] = student_data
         self._next_id += 1
+
+        print("ISI STORAGE:", self._storage)
+        
         return student_data
 
     def find_all(self) -> list[dict]:
