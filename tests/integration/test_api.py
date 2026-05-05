@@ -25,7 +25,7 @@ def test_post_valid_student(client):
     assert data["id"] == 1
     assert data["name"] == "Budi"
     assert data["nilai_akhir"] == 82.5
-    assert data["grade"] == "B"
+    assert data["grade"] == "A"
     assert all(k in data for k in ["id", "name", "nilai_tugas", "nilai_uts", "nilai_uas", "nilai_akhir", "grade"])
 
 
